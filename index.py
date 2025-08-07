@@ -64,6 +64,7 @@ class App:
 
     def pesquisar(self, val):
 
+        print(f"\nPesquisando processo: {val}")
         num_processo = re.sub(r'[^0-9]','', val)
 
         if num_processo.isdigit() != True:
@@ -81,10 +82,67 @@ class App:
             self.linha = cell_a.row
 
             yield num_processo
-        
-    def main(self):
-        time.sleep(5)
-        self.navegador.find_element(By.ID, 'setaVoltar').click()
+
+    def situProcesso(self):
+        print("\nBuscando situação do processo...\n")
+
+        labelSeg = None
+        labelSitu = None
+
+        try:
+            labelSeg = self.navegador.find_element(By.ID, "labelSegredoDeJusticaProcesso")
+            print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!!")
+            print("Seguindo para o próximo...")
+            return False
+        except:
+            pass
+
+        try:
+            labelSitu = self.navegador.find_element(By.ID, "labelSituacaoProcesso")
+            situ = labelSitu.text
+            print(f"❌ Processo {situ.upper()} !!!")
+            print("Seguindo para o próximo...")
+            return False
+        except:
+            pass
+
+        if labelSeg is None and labelSitu is None:
+            print("✅ NENHUM STATUS ENCONTRADO!!")
+
+    def status(self):
+
+        var = False
+        list_status = []
+
+        if "arquivado" in self.navegador.page_source:
+            list_status.append("Arquivado")
+            print("✅ Caso está ARQUIVADO")
+            var = True
+            
+        if "baixado" in self.navegador.page_source:
+            list_status.append("Baixado")
+            print("✅ Caso está BAIXADO")
+            var = True
+            
+        if "Julgado Procedente" in self.navegador.page_source:
+            list_status.append("Julgado Procedente")
+            print("✅ Caso está JULGADO PROCEDENTE")
+            var = True
+
+        if "Julgado improcedente" in self.navegador.page_source:
+            list_status.append("Julgado Improcedente")
+            print("✅ Caso está JULGADO IMPROCEDENTE")
+            var = True
+
+        if "sentença" in self.navegador.page_source or "sentenciado" in self.navegador.page_source:
+            list_status.append("Sentença")
+            print("✅ Caso está SENTENCIADO")
+            var = True
+
+        if var == False:
+            print("🟨 NENHUM STATUS ENCONTRADO!!\n")
+
+        print() 
         
     def run(self):
         self.logar()
@@ -92,7 +150,12 @@ class App:
         
         for num_processo in self.ponteiro():
             if self.pesquisar(num_processo) != False:
-                self.main()
+                if self.situProcesso() != False:
+                    self.status()
+                
+                time.sleep(3)
+                print('='*50)
+                self.navegador.find_element(By.ID, 'setaVoltar').click()
             
             else:
                 print("Seguindo para o próximo processo...")
@@ -102,4 +165,4 @@ try:
     app = App()
 
 except Exception as e:
-    print("ERROR!!")
+    print("\n\n❌ ERROR!!!\n\n")
