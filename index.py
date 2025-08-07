@@ -62,15 +62,41 @@ class App:
         time.sleep(1)
         self.navegador.find_element(By.XPATH, '//*[@id="root"]/div/header/nav/aside[1]/div[1]/nav/ul/li[2]/ul/li[1]/a').click()
 
-    def pesquisar(self):
-        self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').send_keys("10329758420248260562") # 13 primeiros digitos
+    def pesquisar(self, val):
+
+        num_processo = re.sub(r'[^0-9]','', val)
+
+        if num_processo.isdigit() != True:
+            print("\n\n❌ Processo não é valida, indo para a proxima.\n\n")
+            return False
+        
+        self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').send_keys(num_processo[:13])
+        self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").send_keys(num_processo[-4:])
         self.navegador.find_element(By.ID, 'botaoConsultarProcessos').click()
         
+    def ponteiro(self):
+        for row in self.sheet.iter_rows(min_row=2, max_col=1):
+            cell_a = row[0]
+            num_processo = str(cell_a.value).strip()
+            self.linha = cell_a.row
+
+            yield num_processo
+        
+    def main(self):
+        time.sleep(5)
+        self.navegador.find_element(By.ID, 'setaVoltar').click()
         
     def run(self):
         self.logar()
         self.navegar()
-        self.pesquisar()
+        
+        for num_processo in self.ponteiro():
+            if self.pesquisar(num_processo) != False:
+                self.main()
+            
+            else:
+                print("Seguindo para o próximo processo...")
+                continue
 
 try:
     app = App()
