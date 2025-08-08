@@ -83,6 +83,23 @@ class App:
 
             yield num_processo
 
+    def polo(self):
+
+        time.sleep(3)
+        print("Buscando situação do Polo...")
+        elemento = self.navegador.find_element(By.CLASS_NAME, "nomeParteEAdvogado").text
+        
+        try:
+            if os.getenv("NOME_DO_POLO") in elemento.lower():
+                print("✅ POLO ATIVO!!!")
+            
+            else:
+                print("❌ POLO INATIVO!!!")
+        
+        except:
+            print("❌ ERRO NA LOCALIZAÇÃO DO POLO!!!")
+            raise
+
     def situProcesso(self):
         print("\nBuscando situação do processo...\n")
 
@@ -94,6 +111,7 @@ class App:
             print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!!")
             print("Seguindo para o próximo...")
             return False
+        
         except:
             pass
 
@@ -103,6 +121,7 @@ class App:
             print(f"❌ Processo {situ.upper()} !!!")
             print("Seguindo para o próximo...")
             return False
+        
         except:
             pass
 
@@ -150,6 +169,7 @@ class App:
         
         for num_processo in self.ponteiro():
             if self.pesquisar(num_processo) != False:
+                self.polo()
                 if self.situProcesso() != False:
                     self.status()
                 
