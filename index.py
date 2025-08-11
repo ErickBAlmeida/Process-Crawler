@@ -112,7 +112,7 @@ class App:
         try:
             labelSeg = self.navegador.find_element(By.ID, "labelSegredoDeJusticaProcesso")
             print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!! \nSeguindo para o próximo...")
-            self.res_situProcesso = "Segredo de Justiça"
+            self.res_situProcesso = "SEGREDO DE JUSTIÇA"
             return False
         
         except:
@@ -130,27 +130,34 @@ class App:
 
         if labelSeg is None and labelSitu is None:
             print("✅ Processo em andamento!!")
-            self.res_situProcesso = "Em Andamento"
+            self.res_situProcesso = "EM ANDAMENTO"
 
-    def status(self):
+    def locStatus(self):
         print("\nBuscando status do processo...")
 
+        try:
+            link = WebDriverWait(self.navegador, 5).until(
+                EC.presence_of_element_located((By.ID, "linkmovimentacoes"))
+            )
+            self.navegador.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", link)
+            time.sleep(1)
+            link.click()
+
+            self.status('tabelaTodasMovimentacoes')
+        
+        except:
+            self.status('tabelaUltimasMovimentacoes')
+
+    def status(self, id):
         status_map = {
             "arquivado": "Arquivado",
             "baixado": "Baixado",
             "sentença": "Sentença",
             "sentenciado": "Sentença",
         }
-
-        link = WebDriverWait(self.navegador, 5).until(
-            EC.presence_of_element_located((By.ID, "linkmovimentacoes"))
-        )
-        self.navegador.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", link)
-        time.sleep(1)
-        link.click()
         
         time.sleep(1)
-        div_mov = self.navegador.find_element(By.ID, 'tabelaTodasMovimentacoes')
+        div_mov = self.navegador.find_element(By.ID, id)
         mov_txt = div_mov.text
 
         var = False
@@ -168,19 +175,18 @@ class App:
             var = True
 
             if "Procedente" in mov_txt:
-                list_status.append("Procedente")
+                list_status.append("Julgado Procedente")
                 print("   ✅ Caso está JULGADO PROCEDENTE")
                 var = True
 
             elif "improcedente" in mov_txt:
-                list_status.append("Improcedente")
+                list_status.append("Julgado Improcedente")
                 print("   ✅ Caso está JULGADO IMPROCEDENTE")
                 var = True
 
             else:
                 list_status.append("Julgamento INDERTERMINADO")
                 print("   🟨 Julgamento INDERTERMINADO!!!")
-
 
         if not var:
             self.res_status = ''
@@ -215,7 +221,7 @@ class App:
                 self.polo()
                 
                 if self.situProcesso() != False:
-                    self.status()
+                    self.locStatus()
                     
                 self.retorno(num_processo)                    
                 
