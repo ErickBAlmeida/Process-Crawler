@@ -6,6 +6,7 @@ import time
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -34,6 +35,8 @@ class App:
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
 
+        self.res_status = ''
+
         self.run()
 
     def logar(self):
@@ -57,6 +60,17 @@ class App:
         self.navegador.find_element(By.XPATH, '//*[@id="root"]/div/header/nav/aside[1]/div[1]/nav/ul/li[2]/button').click()
         time.sleep(1)
         self.navegador.find_element(By.XPATH, '//*[@id="root"]/div/header/nav/aside[1]/div[1]/nav/ul/li[2]/ul/li[1]/a').click()
+        
+    def ponteiro(self):
+        wb = load_workbook("SP.xlsx")
+        sheet = wb.active
+
+        for row in sheet.iter_rows(min_row=2, max_col=1):
+            cell_a = row[0]
+            num_processo = str(cell_a.value).strip()
+            self.linha = cell_a.row
+
+            yield num_processo
 
     def pesquisar(self, val):
         print(f"\nPesquisando processo: {val}")
@@ -70,23 +84,27 @@ class App:
             self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').send_keys(num_processo[:13])
             self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").send_keys(num_processo[-4:])
             self.navegador.find_element(By.ID, 'botaoConsultarProcessos').click()
+
+            time.sleep(2)
+
+            try:
+                self.navegador.find_element(By.ID, "mensagemRetorno")
+
+                print("\n\n❌ Processo não é valida, indo para a proxima.\n\n")
+                              
+                self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').clear()
+                self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").clear()
+
+                return False
+                
+            except NoSuchElementException:
+                pass
         
         except:
             print("❌ Erro ao pesquisar o processo!")
-        
-    def ponteiro(self):
-        wb = load_workbook("SP.xlsx")
-        sheet = wb.active
-
-        for row in sheet.iter_rows(min_row=2, max_col=1):
-            cell_a = row[0]
-            num_processo = str(cell_a.value).strip()
-            self.linha = cell_a.row
-
-            yield num_processo
 
     def polo(self):
-        time.sleep(3)
+        time.sleep(1)
         print("Buscando situação do Polo...")
         elemento = self.navegador.find_element(By.CLASS_NAME, "nomeParteEAdvogado").text
         
@@ -152,8 +170,8 @@ class App:
         status_map = {
             "arquivado": "Arquivado",
             "baixado": "Baixado",
-            "sentença": "Sentença",
-            "sentenciado": "Sentença",
+            "sentença": "Sentenciado",
+            "sentenciado": "Sentenciado",
         }
         
         time.sleep(1)
@@ -161,14 +179,16 @@ class App:
         mov_txt = div_mov.text
 
         var = False
-        list_status = []
+        set_status = set()
 
         # Busca status simples
         for termo, descricao in status_map.items():
             if termo.lower() in mov_txt.lower():
-                list_status.append(descricao)
+                set_status.add(descricao)
                 print(f"✅ Caso está {descricao.upper()}")
                 var = True
+            
+        list_status = list(set_status)
             
         if "Julgado" in mov_txt:
             print("✅ Caso está JULGADO")
@@ -208,9 +228,10 @@ class App:
             sheet.append(retorno)
             wb.save("saida_SP.xlsx")
         
-        except:
+        except Exception as e:
             print("❌ Erro ao retornar arquivo Excel!!!")
-
+            print(f"Detalhes do erro: {e}")
+            raise
         
     def run(self):
         self.logar()
@@ -233,8 +254,5 @@ class App:
                 print("Seguindo para o próximo processo...")
                 continue       
 
-try:
+if __name__ == "__main__":
     app = App()
-
-except Exception as e:
-    print("\n\n❌ ERROR!!!\n\n")
