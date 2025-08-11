@@ -135,6 +135,13 @@ class App:
     def status(self):
         print("\nBuscando status do processo...")
 
+        status_map = {
+            "arquivado": "Arquivado",
+            "baixado": "Baixado",
+            "sentença": "Sentença",
+            "sentenciado": "Sentença",
+        }
+
         link = WebDriverWait(self.navegador, 5).until(
             EC.presence_of_element_located((By.ID, "linkmovimentacoes"))
         )
@@ -149,44 +156,33 @@ class App:
         var = False
         list_status = []
 
-        if "arquivado" in mov_txt:
-            list_status.append("Arquivado")
-            print("✅ Caso está ARQUIVADO")
-            var = True
-            
-        if "baixado" in mov_txt:
-            list_status.append("Baixado")
-            print("✅ Caso está BAIXADO")
-            var = True
+        # Busca status simples
+        for termo, descricao in status_map.items():
+            if termo.lower() in mov_txt.lower():
+                list_status.append(descricao)
+                print(f"✅ Caso está {descricao.upper()}")
+                var = True
             
         if "Julgado" in mov_txt:
             print("✅ Caso está JULGADO")
             var = True
 
-            try:
-                if "Procedente" in mov_txt:
-                    list_status.append("Procedente")
-                    print("   ✅ Caso está JULGADO PROCEDENTE")
-                    var = True
+            if "Procedente" in mov_txt:
+                list_status.append("Procedente")
+                print("   ✅ Caso está JULGADO PROCEDENTE")
+                var = True
 
-                elif "improcedente" in mov_txt:
-                    list_status.append("Improcedente")
-                    print("   ✅ Caso está JULGADO IMPROCEDENTE")
-                    var = True
+            elif "improcedente" in mov_txt:
+                list_status.append("Improcedente")
+                print("   ✅ Caso está JULGADO IMPROCEDENTE")
+                var = True
 
-                else:
-                    list_status.append("Julgamento INDERTERMINADO")
-                    print("   🟨 Julgamento INDERTERMINADO!!!")
-                                
-            except:
-                pass
+            else:
+                list_status.append("Julgamento INDERTERMINADO")
+                print("   🟨 Julgamento INDERTERMINADO!!!")
 
-        if "sentença" in mov_txt or "sentenciado" in mov_txt:
-            list_status.append("Sentença")
-            print("✅ Caso está SENTENCIADO")
-            var = True
 
-        if var == False:
+        if not var:
             self.res_status = ''
             print("🟨 NENHUM STATUS ENCONTRADO!!\n")
         
