@@ -21,22 +21,18 @@ class App:
 
         self.notifier = ToastNotifier()
 
-        self.wb = load_workbook("SP.xlsx")
-        self.sheet = self.wb.active
-
         subprocess.Popen([
             os.getenv("CHROME_PATH"),
             f"--remote-debugging-port={os.getenv('DEBUG_PORT')}",
-            f"--user-data-dir={os.getenv('USER_DATA_DIR')}"
+            f"--user-data-dir={os.getenv('USER_DATA_DIR')}",
+            os.getenv("LINK")
         ])
 
         #   Configurações do Chrome para se conectar via DevTools
         options = Options()
-        options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"
-        options.add_argument("--start-maximized")
-        
+        options.add_argument("--headless=new")
+        options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
-        self.navegador.get(os.getenv("LINK"))
 
         self.run()
 
@@ -63,7 +59,6 @@ class App:
         self.navegador.find_element(By.XPATH, '//*[@id="root"]/div/header/nav/aside[1]/div[1]/nav/ul/li[2]/ul/li[1]/a').click()
 
     def pesquisar(self, val):
-
         print(f"\nPesquisando processo: {val}")
         num_processo = re.sub(r'[^0-9]','', val)
 
@@ -71,12 +66,19 @@ class App:
             print("\n\n❌ Processo não é valida, indo para a proxima.\n\n")
             return False
         
-        self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').send_keys(num_processo[:13])
-        self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").send_keys(num_processo[-4:])
-        self.navegador.find_element(By.ID, 'botaoConsultarProcessos').click()
+        try:
+            self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').send_keys(num_processo[:13])
+            self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").send_keys(num_processo[-4:])
+            self.navegador.find_element(By.ID, 'botaoConsultarProcessos').click()
+        
+        except:
+            print("❌ Erro ao pesquisar o processo!")
         
     def ponteiro(self):
-        for row in self.sheet.iter_rows(min_row=2, max_col=1):
+        wb = load_workbook("SP.xlsx")
+        sheet = wb.active
+
+        for row in sheet.iter_rows(min_row=2, max_col=1):
             cell_a = row[0]
             num_processo = str(cell_a.value).strip()
             self.linha = cell_a.row
@@ -84,7 +86,6 @@ class App:
             yield num_processo
 
     def polo(self):
-
         time.sleep(3)
         print("Buscando situação do Polo...")
         elemento = self.navegador.find_element(By.CLASS_NAME, "nomeParteEAdvogado").text
@@ -92,24 +93,26 @@ class App:
         try:
             if os.getenv("NOME_DO_POLO") in elemento.lower():
                 print("✅ POLO ATIVO!!!")
+                self.res_polo = "Ativo"
             
             else:
                 print("❌ POLO INATIVO!!!")
+                self.res_polo = "Inativo"
         
         except:
             print("❌ ERRO NA LOCALIZAÇÃO DO POLO!!!")
             raise
 
     def situProcesso(self):
-        print("\nBuscando situação do processo...\n")
+        print("\nBuscando situação do processo...")
 
         labelSeg = None
         labelSitu = None
 
         try:
             labelSeg = self.navegador.find_element(By.ID, "labelSegredoDeJusticaProcesso")
-            print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!!")
-            print("Seguindo para o próximo...")
+            print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!! \nSeguindo para o próximo...")
+            self.res_situProcesso = "Segredo de Justiça"
             return False
         
         except:
@@ -118,50 +121,94 @@ class App:
         try:
             labelSitu = self.navegador.find_element(By.ID, "labelSituacaoProcesso")
             situ = labelSitu.text
-            print(f"❌ Processo {situ.upper()} !!!")
-            print("Seguindo para o próximo...")
+            self.res_situProcesso = f"{situ.upper()}"
+            print(f"❌ Processo {situ.upper()} !!! \nSeguindo para o próximo...")
             return False
         
         except:
             pass
 
         if labelSeg is None and labelSitu is None:
-            print("✅ NENHUM STATUS ENCONTRADO!!")
+            print("✅ Processo em andamento!!")
+            self.res_situProcesso = "Em Andamento"
 
     def status(self):
+        print("\nBuscando status do processo...")
+
+        link = WebDriverWait(self.navegador, 5).until(
+            EC.presence_of_element_located((By.ID, "linkmovimentacoes"))
+        )
+        self.navegador.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", link)
+        time.sleep(1)
+        link.click()
+        
+        time.sleep(1)
+        div_mov = self.navegador.find_element(By.ID, 'tabelaTodasMovimentacoes')
+        mov_txt = div_mov.text
 
         var = False
         list_status = []
 
-        if "arquivado" in self.navegador.page_source:
+        if "arquivado" in mov_txt:
             list_status.append("Arquivado")
             print("✅ Caso está ARQUIVADO")
             var = True
             
-        if "baixado" in self.navegador.page_source:
+        if "baixado" in mov_txt:
             list_status.append("Baixado")
             print("✅ Caso está BAIXADO")
             var = True
             
-        if "Julgado Procedente" in self.navegador.page_source:
-            list_status.append("Julgado Procedente")
-            print("✅ Caso está JULGADO PROCEDENTE")
+        if "Julgado" in mov_txt:
+            print("✅ Caso está JULGADO")
             var = True
 
-        if "Julgado improcedente" in self.navegador.page_source:
-            list_status.append("Julgado Improcedente")
-            print("✅ Caso está JULGADO IMPROCEDENTE")
-            var = True
+            try:
+                if "Procedente" in mov_txt:
+                    list_status.append("Procedente")
+                    print("   ✅ Caso está JULGADO PROCEDENTE")
+                    var = True
 
-        if "sentença" in self.navegador.page_source or "sentenciado" in self.navegador.page_source:
+                elif "improcedente" in mov_txt:
+                    list_status.append("Improcedente")
+                    print("   ✅ Caso está JULGADO IMPROCEDENTE")
+                    var = True
+
+                else:
+                    list_status.append("Julgamento INDERTERMINADO")
+                    print("   🟨 Julgamento INDERTERMINADO!!!")
+                                
+            except:
+                pass
+
+        if "sentença" in mov_txt or "sentenciado" in mov_txt:
             list_status.append("Sentença")
             print("✅ Caso está SENTENCIADO")
             var = True
 
         if var == False:
+            self.res_status = ''
             print("🟨 NENHUM STATUS ENCONTRADO!!\n")
+        
+        else:
+            self.res_status = ', '.join(str(x) for x in list_status)
 
         print() 
+
+    def retorno(self, num_processo):
+        
+        try:
+            retorno = [num_processo, self.res_polo, self.res_situProcesso, self.res_status]
+
+            wb = load_workbook("saida_SP.xlsx")
+            sheet = wb.active
+
+            sheet.append(retorno)
+            wb.save("saida_SP.xlsx")
+        
+        except:
+            print("❌ Erro ao retornar arquivo Excel!!!")
+
         
     def run(self):
         self.logar()
@@ -170,8 +217,11 @@ class App:
         for num_processo in self.ponteiro():
             if self.pesquisar(num_processo) != False:
                 self.polo()
+                
                 if self.situProcesso() != False:
                     self.status()
+                    
+                self.retorno(num_processo)                    
                 
                 time.sleep(3)
                 print('='*50)
@@ -179,7 +229,7 @@ class App:
             
             else:
                 print("Seguindo para o próximo processo...")
-                continue
+                continue       
 
 try:
     app = App()
