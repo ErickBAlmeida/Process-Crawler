@@ -89,12 +89,10 @@ class App:
 
             try:
                 self.navegador.find_element(By.ID, "mensagemRetorno")
-
-                print("\n\n❌ Processo não é valida, indo para a proxima.\n\n")
+                print("\n\n❌ Processo não é valida, reiniciando processo e indo para a proxima.\n\n")
                               
-                self.navegador.find_element(By.ID, 'numeroDigitoAnoUnificado').clear()
-                self.navegador.find_element(By.XPATH, "//*[@id='foroNumeroUnificado']").clear()
-
+                self.navegador.find_element(By. CLASS_NAME, 'linkLogo').click()
+                self.navegar()
                 return False
                 
             except NoSuchElementException:
@@ -227,6 +225,7 @@ class App:
 
             sheet.append(retorno)
             wb.save("saida_SP.xlsx")
+            print("✅ Arquivo Excel atualizado com sucesso!!!")
         
         except Exception as e:
             print("❌ Erro ao retornar arquivo Excel!!!")
