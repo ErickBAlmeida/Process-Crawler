@@ -26,7 +26,7 @@ class App:
             os.getenv("CHROME_PATH"),
             f"--remote-debugging-port={os.getenv('DEBUG_PORT')}",
             f"--user-data-dir={os.getenv('USER_DATA_DIR')}",
-            os.getenv("LINK")
+            os.getenv("LINK_SP")
         ])
 
         #   Configurações do Chrome para se conectar via DevTools
@@ -34,8 +34,6 @@ class App:
         options.add_argument("--headless=new")
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
-
-        self.res_status = ''
 
         self.run()
 
@@ -62,7 +60,7 @@ class App:
         self.navegador.find_element(By.XPATH, '//*[@id="root"]/div/header/nav/aside[1]/div[1]/nav/ul/li[2]/ul/li[1]/a').click()
         
     def ponteiro(self):
-        wb = load_workbook("SP.xlsx")
+        wb = load_workbook("Bases\SP.xlsx")
         sheet = wb.active
 
         for row in sheet.iter_rows(min_row=2, max_col=1):
@@ -109,7 +107,7 @@ class App:
         elemento = self.navegador.find_element(By.CLASS_NAME, "nomeParteEAdvogado").text
         
         try:
-            if os.getenv("NOME_DO_POLO") in elemento.lower():
+            if os.getenv("POLO") in elemento.lower():
                 print("✅ POLO ATIVO!!!")
                 self.res_polo = "Ativo"
             
@@ -173,6 +171,8 @@ class App:
             "sentença": "Sentenciado",
             "sentenciado": "Sentenciado",
         }
+
+        self.res_status = ''
         
         time.sleep(1)
         div_mov = self.navegador.find_element(By.ID, id)
@@ -209,7 +209,6 @@ class App:
                 print("   🟨 Julgamento INDERTERMINADO!!!")
 
         if not var:
-            self.res_status = ''
             print("🟨 NENHUM STATUS ENCONTRADO!!\n")
         
         else:
@@ -226,7 +225,7 @@ class App:
             sheet = wb.active
 
             sheet.append(retorno)
-            wb.save("saida_SP.xlsx")
+            wb.save("Relatórios\saida_SP.xlsx")
         
         except Exception as e:
             print("❌ Erro ao retornar arquivo Excel!!!")
