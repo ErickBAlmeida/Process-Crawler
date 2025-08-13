@@ -1,15 +1,15 @@
-# BOT Polos Status
+# Automação Process-Crawler
 
-Este projeto é um bot de automação desenvolvido em Python para consultar e extrair o status de processos judiciais em um determinado sistema, utilizando Selenium WebDriver e manipulação de planilhas Excel.
+Este projeto é uma automação desenvolvido em Python para consultar e extrair o status de processos judiciais em determinados sistema, utilizando Selenium WebDriver e manipulação de planilhas Excel.
 
 ## Funcionalidades
 - Acessa o sistema automaticamente via navegador Chrome.
-- Realiza login com certificado digital.
+- Realiza login via certificado digital.
 - Navega até a área de consulta de processos.
 - Lê uma lista de números de processos a partir de uma planilha Excel.
 - Pesquisa cada processo e extrai o status atual (arquivado, baixado, julgado, etc.).
 - Exibe o status no console e pode notificar via Toast no Windows.
-- Suporta identificação de processos em segredo de justiça.
+- Suporta identificação de processos em situação atípica.
 
 ## Requisitos
 - Python 3.8+
