@@ -155,7 +155,7 @@ class App:
             "arquivado": "Caso foi ARQUIVADO",
             "baixado": "Caso foi BAIXADO",
             "sentença": "Caso foi SENTENCIADO",
-            "suRJenso": "Caso foi SURJENSO"
+            "suspenso": "Caso foi SUSPENSO"
         }
 
         found = False
