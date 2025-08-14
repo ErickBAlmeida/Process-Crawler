@@ -25,6 +25,10 @@ pip install -r requirements.txt
 ## Como usar
 Execute o script principal:
 ```bash
-python index.py
+python SP.py
 ```
+```bash
+python RJ.py
+```
+
 O bot irá abrir o navegador, realizar o login e processar todos os números de processo da planilha, exibindo o status de cada um.
