@@ -31,7 +31,6 @@ class App:
 
         #   Configurações do Chrome para se conectar via DevTools
         options = Options()
-        options.add_argument("--headless=new")
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
 
@@ -66,7 +65,6 @@ class App:
         for row in sheet.iter_rows(min_row=2, max_col=1):
             cell_a = row[0]
             num_processo = str(cell_a.value).strip()
-            self.linha = cell_a.row
 
             yield num_processo
 
