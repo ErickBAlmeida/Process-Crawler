@@ -6,7 +6,7 @@ import time
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -125,9 +125,16 @@ class App:
             print("❌ Erro ao pesquisar petição\n")
             raise
 
-    def polo(self):        
-        try:            
+    def polo(self):
+        
+        try:
             time.sleep(3)
+            self.navegador.switch_to.alert.accept()
+
+        except NoAlertPresentException:
+            ...
+
+        try:            
             abas = self.navegador.window_handles
             self.navegador.switch_to.window(abas[1])
 
@@ -139,14 +146,19 @@ class App:
             if os.getenv('POLO_RJ') in polos_ativos.text:
                 self.res_polo = 'Ativo'
                 print("\n✅ POLO ATIVO")
-                time.sleep(1)
-                return True
+
+            else:
+                self.res_polo = 'Inativo'
+                print("\n❌ POLO INATIVO")
+
+            time.sleep(1)
+            return True
         
         except:
             print("❌ Não foi possível localizar o polo ativo")
             self.res_polo = 'Inativo'
             self.res_status = 'Inativo'
-            time.sleep(2)
+            
             self.retorno()
             return False
         
