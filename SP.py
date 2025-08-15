@@ -103,7 +103,7 @@ class App:
         elemento = self.navegador.find_element(By.CLASS_NAME, "nomeParteEAdvogado").text
         
         try:
-            if os.getenv("POLO") in elemento.lower():
+            if os.getenv("POLO_SP") in elemento.lower():
                 print("✅ POLO ATIVO!!!")
                 self.res_polo = "Ativo"
             
@@ -125,6 +125,7 @@ class App:
             labelSeg = self.navegador.find_element(By.ID, "labelSegredoDeJusticaProcesso")
             print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!! \nSeguindo para o próximo...")
             self.res_situProcesso = "SEGREDO DE JUSTIÇA"
+            self.res_status = 'N/D'
             return False
         
         except:
@@ -135,6 +136,7 @@ class App:
             situ = labelSitu.text
             self.res_situProcesso = f"{situ.upper()}"
             print(f"❌ Processo {situ.upper()} !!! \nSeguindo para o próximo...")
+            self.res_status = 'N/D'
             return False
         
         except:
@@ -167,8 +169,6 @@ class App:
             "sentença": "Sentenciado",
             "sentenciado": "Sentenciado",
         }
-
-        self.res_status = ''
         
         time.sleep(1)
         div_mov = self.navegador.find_element(By.ID, id)
@@ -206,6 +206,7 @@ class App:
 
         if not var:
             print("🟨 NENHUM STATUS ENCONTRADO!!\n")
+            self.res_status = 'N/D'
         
         else:
             self.res_status = ', '.join(str(x) for x in list_status)
@@ -217,7 +218,7 @@ class App:
         try:
             retorno = [num_processo, self.res_polo, self.res_situProcesso, self.res_status]
 
-            wb = load_workbook("saida_SP.xlsx")
+            wb = load_workbook("Relatórios\saida_SP.xlsx")
             sheet = wb.active
 
             sheet.append(retorno)
