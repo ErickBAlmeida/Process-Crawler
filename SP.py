@@ -88,14 +88,33 @@ class App:
 
             try:
                 self.navegador.find_element(By.ID, "mensagemRetorno")
-                print("\n\n❌ Processo não é valida, reiniciando processo e indo para a proxima.\n\n")
+                print(f"\n\n❌ O processo '{num_processo}' não é valido\nReiniciando processo e indo para a proxima.\n")
                               
-                self.navegador.find_element(By. CLASS_NAME, 'linkLogo').click()
+                self.navegador.find_element(By.CLASS_NAME, 'linkLogo').click()
+                self.atualizar_base()
                 self.navegar()
                 return False
                 
             except NoSuchElementException:
                 pass
+
+            try:
+                self.navegador.find_element(By.CLASS_NAME, "blockMsg")
+                print("\n\n❌ Processo não é valida, reiniciando processo e indo para a proxima.\n")
+                              
+                self.navegador.find_element(By.ID, 'botaoFecharPopupSenha').click()
+
+                self.res_polo = 'Inativo'
+                self.res_situProcesso = 'SEGREDO DE JUSTIÇA'
+                self.res_status = 'N/D'
+                
+                self.retorno(num_processo)
+                self.atualizar_base()
+                
+                return False
+                
+            except NoSuchElementException:
+                pass            
         
         except:
             print("❌ Erro ao pesquisar o processo!")
@@ -126,7 +145,7 @@ class App:
 
         try:
             labelSeg = self.navegador.find_element(By.ID, "labelSegredoDeJusticaProcesso")
-            print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!! \nSeguindo para o próximo...")
+            print(f"❌ O processo é um SEGREDO DE JUSTIÇA !!! \nSeguindo para o próximo...\n")
             self.res_situProcesso = "SEGREDO DE JUSTIÇA"
             self.res_status = 'N/D'
             return False
@@ -138,7 +157,7 @@ class App:
             labelSitu = self.navegador.find_element(By.ID, "labelSituacaoProcesso")
             situ = labelSitu.text
             self.res_situProcesso = f"{situ.upper()}"
-            print(f"❌ Processo {situ.upper()} !!! \nSeguindo para o próximo...")
+            print(f"❌ Processo {situ.upper()} !!! \nSeguindo para o próximo...\n")
             self.res_status = 'N/D'
             return False
         
@@ -246,6 +265,7 @@ class App:
         num_processo = self.ponteiro()
         
         if num_processo:
+            print('='*50)
             if self.pesquisar(num_processo) != False:
                 self.polo()
                 
@@ -256,11 +276,10 @@ class App:
                 self.atualizar_base()
                 
                 time.sleep(3)
-                print('='*50)
                 self.navegador.find_element(By.ID, 'setaVoltar').click()
             
             else:
-                print("Seguindo para o próximo processo...")
+                print("Seguindo para o próximo processo...\n")
 
 if __name__ == "__main__":
     app = App()
