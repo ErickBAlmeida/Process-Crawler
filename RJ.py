@@ -32,8 +32,6 @@ class App:
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
 
-        self.run()
-
     def logar(self):
         
         time.sleep(4)
@@ -66,11 +64,13 @@ class App:
         wb = load_workbook("Bases\RJ.xlsx")
         sheet = wb.active
         
-        for row in sheet.iter_rows(min_row=2, max_col=1):
-            cell_a = row[0]
-            num_processo = str(cell_a.value).strip()
+        cell_a = sheet.cell(row=2, column=1)
+        num_processo = cell_a.value
 
-            yield num_processo
+        if num_processo is None:
+            return None
+        
+        return num_processo
 
     def pesquisar(self, num_processo):
         
@@ -188,13 +188,19 @@ class App:
 
             sheet.append(retorno)
             wb.save("Relatórios\saida_RJ.xlsx")
-            print("✅ Arquivo Excel atualizado com sucesso!!!")
-            wb.save("Relatórios\saida_RJ.xlsx")
+            print("✅ Relatório atualizado com sucesso!!!")
         
         except Exception as e:
-            print("❌ Erro ao retornar arquivo Excel!!!")
             print(f"Detalhes do erro: {e}")
             raise
+
+    def atualizar_base(self):
+            wb = load_workbook("Bases\RJ.xlsx")
+            sheet = wb.active
+            
+            sheet.delete_rows(2, 1)
+            wb.save("Bases\RJ.xlsx")
+            print("✅ Base atualizada com sucesso.")
 
     def finalizar(self):
         abas = self.navegador.window_handles
@@ -209,19 +215,27 @@ class App:
     def run(self):
         self.logar()
         
-        for num_processo in self.ponteiro():
+        num_processo = self.ponteiro()
+        
+        if num_processo :
             if self.pesquisar(num_processo) != False:
                 if self.polo() != False:
                     self.status()
                     
-                self.retorno(num_processo)                    
+                self.retorno(num_processo)   
+                self.atualizar_base()                 
                 
                 time.sleep(3)
                 self.finalizar()
             
             else:
-                print("Seguindo para o próximo processo...")
-                continue  
+                print("Seguindo para o próximo processo...")  
 
 if __name__ == "__main__":
     app = App()
+    
+    wb = load_workbook("Bases\RJ.xlsx")
+    sheet = wb.active
+
+    for row in sheet.iter_rows(min_row=2, max_col=1):
+        app.run()
