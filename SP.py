@@ -34,7 +34,8 @@ class App:
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
 
-        self.run()
+        self.logar()
+        self.navegar()
 
     def logar(self):
         self.navegador.find_element(By.ID, "identificacao").click()
@@ -62,11 +63,13 @@ class App:
         wb = load_workbook("Bases\SP.xlsx")
         sheet = wb.active
 
-        for row in sheet.iter_rows(min_row=2, max_col=1):
-            cell_a = row[0]
-            num_processo = str(cell_a.value).strip()
+        cell_a = sheet.cell(row=2, column=1)
+        num_processo = cell_a.value
 
-            yield num_processo
+        if num_processo is None:
+            return None
+        
+        return num_processo
 
     def pesquisar(self, val):
         print(f"\nPesquisando processo: {val}")
@@ -230,19 +233,27 @@ class App:
             print("❌ Erro ao retornar arquivo Excel!!!")
             print(f"Detalhes do erro: {e}")
             raise
+
+    def atualizar_base(self):
+            wb = load_workbook("Bases\SP.xlsx")
+            sheet = wb.active
+            
+            sheet.delete_rows(2, 1)
+            wb.save("Bases\SP.xlsx")
+            print("✅ Base atualizada com sucesso.")
         
     def run(self):
-        self.logar()
-        self.navegar()
+        num_processo = self.ponteiro()
         
-        for num_processo in self.ponteiro():
+        if num_processo:
             if self.pesquisar(num_processo) != False:
                 self.polo()
                 
                 if self.situProcesso() != False:
                     self.locStatus()
                     
-                self.retorno(num_processo)                    
+                self.retorno(num_processo)
+                self.atualizar_base()
                 
                 time.sleep(3)
                 print('='*50)
@@ -250,7 +261,12 @@ class App:
             
             else:
                 print("Seguindo para o próximo processo...")
-                continue       
 
 if __name__ == "__main__":
     app = App()
+
+    wb = load_workbook("Bases\SP.xlsx")
+    sheet = wb.active
+
+    for row in sheet.iter_rows(min_row=2, max_col=1):
+        app.run()
