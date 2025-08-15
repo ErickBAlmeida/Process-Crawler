@@ -32,6 +32,8 @@ class App:
         options.debugger_address = f"127.0.0.1:{os.getenv('DEBUG_PORT')}"        
         self.navegador = webdriver.Chrome(service=Service(), options=options)
 
+        self.logar()
+
     def logar(self):
         
         time.sleep(4)
@@ -225,8 +227,6 @@ class App:
         time.sleep(2)
 
     def run(self):
-        self.logar()
-        
         num_processo = self.ponteiro()
         
         if num_processo :
