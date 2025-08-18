@@ -275,7 +275,7 @@ class App:
                 self.retorno(num_processo)
                 self.atualizar_base()
                 
-                time.sleep(3)
+                time.sleep(1)
                 self.navegador.find_element(By.ID, 'setaVoltar').click()
             
             else:
