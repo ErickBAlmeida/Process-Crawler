@@ -18,7 +18,6 @@ class App:
         
         load_dotenv()
 
-
         subprocess.Popen([
             os.getenv("CHROME_PATH"),
             f"--remote-debugging-port={os.getenv('DEBUG_PORT')}",
@@ -109,7 +108,8 @@ class App:
                 self.res_polo = 'SIGILOSO'
                 self.res_status = 'SIGILOSO'
 
-                self.retorno(num_processo)                
+                self.retorno(num_processo)
+                self.atualizar_base()   
                 return False
 
             except:
@@ -127,7 +127,7 @@ class App:
             print("❌ Erro ao pesquisar petição\n")
             raise
 
-    def polo(self):
+    def polo(self): # DA PRA REFATORAR ESSA AQUI EIN...
         
         try:
             time.sleep(3)
