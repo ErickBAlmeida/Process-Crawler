@@ -73,13 +73,13 @@ class App:
         
         return num_processo
 
-    def pesquisar(self, num_processo):
+    def pesquisar(self):
         
         try:
-            processo_str = str(num_processo)
+            processo_str = str(self.num_processo)
 
             print("="*50,'\n')
-            print(f"Buscando por: {num_processo}\n\n")
+            print(f"Buscando por: {self.num_processo}\n\n")
 
             processo_str = re.sub(r'[^0-9]','', processo_str)
 
@@ -108,7 +108,7 @@ class App:
                 self.res_polo = 'SIGILOSO'
                 self.res_status = 'SIGILOSO'
 
-                self.retorno(num_processo)
+                self.retorno()
                 self.atualizar_base()   
                 return False
 
@@ -127,42 +127,45 @@ class App:
             print("❌ Erro ao pesquisar petição\n")
             raise
 
-    def polo(self): # DA PRA REFATORAR ESSA AQUI EIN...
+    def polo(self):
         
         try:
             time.sleep(3)
-            self.navegador.switch_to.alert.accept()
+            self.navegador.switch_to.alert.dismiss()
 
-        except NoAlertPresentException:
-            ...
-
-        try:            
-            abas = self.navegador.window_handles
-            self.navegador.switch_to.window(abas[1])
-
-            self.navegador.find_element(By.CLASS_NAME, "titulo-topo-desktop").click()
-            time.sleep(1)
-
-            polos_ativos = self.navegador.find_element(By.ID, "poloAtivo")
-
-            if os.getenv('POLO_RJ') in polos_ativos.text:
-                self.res_polo = 'Ativo'
-                print("\n✅ POLO ATIVO")
-
-            else:
-                self.res_polo = 'Inativo'
-                print("\n❌ POLO INATIVO")
-
-            time.sleep(1)
-            return True
-        
-        except:
-            print("❌ Não foi possível localizar o polo ativo")
             self.res_polo = 'Inativo'
             self.res_status = 'Inativo'
-            
-            self.retorno()
+
+            print("❌ Polo inativo!!")
             return False
+
+        except NoAlertPresentException:
+            try:            
+                abas = self.navegador.window_handles
+                self.navegador.switch_to.window(abas[1])
+
+                self.navegador.find_element(By.CLASS_NAME, "titulo-topo-desktop").click()
+                time.sleep(1)
+
+                polos_ativos = self.navegador.find_element(By.ID, "poloAtivo")
+
+                if os.getenv('POLO_RJ') in polos_ativos.text:
+                    self.res_polo = 'Ativo'
+                    print("\n✅ POLO ATIVO")
+
+                else:
+                    self.res_polo = 'Inativo'
+                    print("\n❌ POLO INATIVO")
+
+                time.sleep(1)
+            
+            except:
+                print("❌ Não foi possível localizar o polo ativo")
+                self.res_polo = 'Inativo'
+            
+        except:
+            print("❌ ERRO na função 'polo'")
+            raise
         
     def status(self):
         status_map = {
@@ -193,9 +196,9 @@ class App:
         else:
             self.res_status = ', '.join(str(x) for x in list_status)
 
-    def retorno(self, num_processo):        
+    def retorno(self):        
         try:
-            retorno = [num_processo, self.res_polo, self.res_status]
+            retorno = [self.num_processo, self.res_polo, self.res_status]
 
             wb = load_workbook("Relatórios\saida_RJ.xlsx")
             sheet = wb.active
@@ -227,14 +230,14 @@ class App:
         time.sleep(2)
 
     def run(self):
-        num_processo = self.ponteiro()
+        self.num_processo = self.ponteiro()
         
-        if num_processo :
-            if self.pesquisar(num_processo) != False:
+        if self.num_processo :
+            if self.pesquisar() != False:
                 if self.polo() != False:
                     self.status()
                     
-                self.retorno(num_processo)   
+                self.retorno()   
                 self.atualizar_base()                 
                 
                 time.sleep(3)
